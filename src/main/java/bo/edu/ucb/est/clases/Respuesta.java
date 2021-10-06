@@ -91,7 +91,7 @@ public class Respuesta {
             mensaje = mensaje+(i+1)+". "+c.getTipo()+" "+c.getMoneda()+"\n";
         }
         menu.add(mensaje);
-        menu.add("Elija una cuenta:");
+        menu.add("Seleccione una cuenta:");
         return menu;
     }
     

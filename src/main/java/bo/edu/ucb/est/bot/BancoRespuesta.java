@@ -22,11 +22,17 @@ public class BancoRespuesta {
     String nombre;
     Map<String,Usuario> usuarios;
     int numeroCuenta;
+    boolean estadoTeclado;
    
     public BancoRespuesta(String nombre){
         this.nombre = nombre;
         this.usuarios = new HashMap<>();
         this.numeroCuenta = 100001;
+        this.estadoTeclado = false;
+    }
+    
+    public boolean getEstadoTeclado(){
+        return estadoTeclado;
     }
     
     public String getNombre(){
@@ -43,6 +49,7 @@ public class BancoRespuesta {
         Respuesta respuesta =new Respuesta();
         String mensaje = update.getMessage().getText();
         Usuario usuario = usuarios.get(id);
+        estadoTeclado = false;
         if(usuario == null){
             usuario = new Usuario();
             usuarios.put(id, usuario);
@@ -69,6 +76,7 @@ public class BancoRespuesta {
                     if(verificarPin(usuario, mensaje)){
                         mensajes = respuesta.menuPrincipal();
                         usuario.setEstadoConversacion(4);
+                        estadoTeclado = true;
                     }else{
                         mensajes = new ArrayList<>(respuesta.errorPin());
                         mensajes.addAll(respuesta.construirMensajeBienvenida(usuario, id));
@@ -87,6 +95,7 @@ public class BancoRespuesta {
                         mensajes = respuesta.menuPrincipal();
                         usuario.setEstadoConversacion(4);
                     }
+                    estadoTeclado = true;
                     break;
                 case 20: //mostrar saldo y pedir cuanto retirar
                     if(controlarIndice(usuario, mensaje) != 0){
@@ -98,6 +107,7 @@ public class BancoRespuesta {
                     }else{
                         mensajes = respuesta.menuPrincipal();
                         usuario.setEstadoConversacion(4);
+                        estadoTeclado = true;
                     }
                     break;
                 case 21: //verificar cuanto retirar y luego mostrar menu principal
@@ -105,11 +115,14 @@ public class BancoRespuesta {
                         mensajes = new ArrayList<>(respuesta.transaccionCorrecta());
                         mensajes.addAll(respuesta.menuPrincipal());
                         usuario.setEstadoConversacion(4);
+                        estadoTeclado = true;
                     }else{
-                        if(usuario.obtenerCuenta(usuario.getUltimaCuentaConsultada()).getSaldo()==0){
+                        Cuenta c = usuario.obtenerCuenta(usuario.getUltimaCuentaConsultada());
+                        if(c.getSaldo()==0 || Double.parseDouble(mensaje)>c.getSaldo()){
                             mensajes = new ArrayList<>(respuesta.respuestaSaldoInsuficiente());
                             mensajes.addAll(respuesta.menuPrincipal());
                             usuario.setEstadoConversacion(4);
+                            estadoTeclado = true;
                         }else{
                             mensajes = new ArrayList<>(respuesta.transaccionIncorrecta());
                             mensajes.addAll(respuesta.respuestaCuantoRetirar()); 
@@ -125,6 +138,7 @@ public class BancoRespuesta {
                         usuario.setEstadoConversacion(31);
                     }else{
                         mensajes = respuesta.menuPrincipal();
+                        estadoTeclado = true;
                         usuario.setEstadoConversacion(4);
                     }
                     break;
@@ -133,6 +147,7 @@ public class BancoRespuesta {
                         mensajes = new ArrayList<>(respuesta.transaccionCorrecta());
                         mensajes.addAll(respuesta.menuPrincipal());
                         usuario.setEstadoConversacion(4);
+                        estadoTeclado = true;
                     }else{
                         mensajes = new ArrayList<>(respuesta.transaccionIncorrecta());
                         mensajes.addAll(respuesta.respuestaCuantoDepositar());
@@ -140,9 +155,11 @@ public class BancoRespuesta {
                     break;
                 case 40: //Obtener tipo de moneda para crear cuenta
                     mensajes = crearCuenta(usuario, mensaje);
+                    estadoTeclado = true;
                     break;
                 case 41: //Ingresa el tipo de cuenta que se selecciono
                     mensajes = indicarTipoCuenta(usuario, mensaje);
+                    estadoTeclado = true;
                     break;
                 
                 default:
@@ -185,16 +202,20 @@ public class BancoRespuesta {
         switch (opc){
             case 1: //Ver saldo
                 menu = respuesta.verificarSiTieneCuentas(u, "Ver Saldo",10);
+                estadoTeclado = true;
                 break;
             case 2: //Retirar Dinero
                 menu = respuesta.verificarSiTieneCuentas(u, "Retirar Dinero",20);
+                estadoTeclado = true;
                 break;
             case 3: // Depositar dinero
                 menu = respuesta.verificarSiTieneCuentas(u, "Depositar Dinero",30);
+                estadoTeclado = true;
                 break;
             case 4: // Crear Cuenta
                 menu = respuesta.seleecionarMoneda();
                 u.setEstadoConversacion(40);
+                estadoTeclado = true;
                 break;
             case 5: // Salir
                 menu = respuesta.construirMensajeBienvenida(u, id);
@@ -208,10 +229,10 @@ public class BancoRespuesta {
     
      public List<String> crearCuenta(Usuario u, String mensaje){
         int opc = verificarIndice(mensaje);
-        List<String> res = new ArrayList<>();
+        List<String> res ;
         Respuesta respuesta = new Respuesta();
         switch(opc){
-            case 1: //crear cuenta en bolivianaos
+            case 1: //crear cuenta en dolares
                 Cuenta cuenta = new Cuenta(numeroCuenta, "Dólares", "",0);
                 u.setUltimaCuentaConsultada(numeroCuenta);
                 u.agregarCuenta(cuenta);
@@ -219,7 +240,7 @@ public class BancoRespuesta {
                 res = respuesta.seleecionarTipo();
                 u.setEstadoConversacion(41);
                 break;
-            case 2: //crear cuenta en dolares
+            case 2: //crear cuenta en bolivianos
                 Cuenta c = new Cuenta(numeroCuenta, "Bolivianos", "",0);
                 u.agregarCuenta(c);
                 u.setUltimaCuentaConsultada(numeroCuenta);
