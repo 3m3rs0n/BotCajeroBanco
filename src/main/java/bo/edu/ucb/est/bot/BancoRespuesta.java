@@ -229,7 +229,7 @@ public class BancoRespuesta {
                 break;
             default:
                 res = respuesta.menuPrincipal();
-                u.setEstadoConversacion(3);
+                u.setEstadoConversacion(4);
                 break;
                 
         }

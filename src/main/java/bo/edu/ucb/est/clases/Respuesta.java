@@ -98,10 +98,8 @@ public class Respuesta {
     public List<String> verificarSiTieneCuentas(Usuario u, String Titulo,int estado){
         List<String> m = new ArrayList<>();
         if(u.getCuentas().isEmpty()){
-            sinCuentas();
-            m = new ArrayList<>(respuesta);
-            menuPrincipal();
-            m.addAll(respuesta);
+            m = new ArrayList<>(sinCuentas());
+            m.addAll(menuPrincipal());
             u.setEstadoConversacion(4);
         }else{
             u.setEstadoConversacion(estado);
