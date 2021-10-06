@@ -89,6 +89,7 @@ public class BancoRespuesta {
                     }else{
                         mensajes = new ArrayList<>(respuesta.errorPin());
                         mensajes.addAll(respuesta.construirMensajeBienvenida(usuario, id));
+                        estadoStiker = 9;
                     }
                     break;
                 case 4: // Controla respuesta de menu de opciones
@@ -125,6 +126,7 @@ public class BancoRespuesta {
                         mensajes.addAll(respuesta.menuPrincipal());
                         usuario.setEstadoConversacion(4);
                         estadoTeclado = true;
+                        estadoStiker = 10;
                     }else{
                         Cuenta c = usuario.obtenerCuenta(usuario.getUltimaCuentaConsultada());
                         if(c.getSaldo()==0 || Double.parseDouble(mensaje)>c.getSaldo()){
@@ -136,6 +138,7 @@ public class BancoRespuesta {
                         }else{
                             mensajes = new ArrayList<>(respuesta.transaccionIncorrecta());
                             mensajes.addAll(respuesta.respuestaCuantoRetirar()); 
+                            estadoStiker = 7;
                         }                       
                     }
                     break;
@@ -157,6 +160,7 @@ public class BancoRespuesta {
                         mensajes = new ArrayList<>(respuesta.transaccionCorrecta());
                         mensajes.addAll(respuesta.menuPrincipal());
                         usuario.setEstadoConversacion(4);
+                        estadoStiker = 10;
                         estadoTeclado = true;
                     }else{
                         mensajes = new ArrayList<>(respuesta.transaccionIncorrecta());

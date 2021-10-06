@@ -32,8 +32,10 @@ public class Bot extends TelegramLongPollingBot{
             "CAACAgIAAxkBAAIHA2FeHQqpMlqJh7kgvDKMRXghedWBAAJ7AQACB4YVBxNydMP0kAc1IQQ",//bankarota
             "CAACAgEAAxkBAAIHCGFeHYeZG9K1epq9RRQaIJJOCpTzAAIGAANaqglMgm7zm6zHiCohBA",//despedida
             "CAACAgIAAxkBAAIHPGFeIW2U8aWXGFT_dti29qOegE98AAJ6AQACB4YVB_LBP_Q8ec-sIQQ",  //crearCuenta
-            "CAACAgIAAxkBAAIHQGFeIahG7VGj1kgJQlpzyhuELBd5AAJ4AQACB4YVB_8jluzyCO7OIQQ"); //verificar monto
-
+            "CAACAgIAAxkBAAIHQGFeIahG7VGj1kgJQlpzyhuELBd5AAJ4AQACB4YVB_8jluzyCO7OIQQ",  //verificar monto
+            "CAACAgIAAxkBAAIHd2FeIxatHFi-eHrAQtr4zrJyP9t4AAKEAQACB4YVB7SeW0xFQf2HIQQ",//no hay cuentas
+            "CAACAgIAAxkBAAIHlGFeI6LUZI8xEYrzwYGz04QdYgmFAAJuAQACB4YVB8X6AjLffinDIQQ",//falla pin
+            "CAACAgIAAxkBAAIHl2FeI-Nb5ET7gGtz4j4pz9jbXu9iAAKDAQACB4YVB2wfAAG72wzAyCEE"); //transaccion completa
     @Override
     public String getBotToken() {
        return "2018134799:AAGtWTi3STuR3rcOhbkMUPbRyyL7JZBYEyk";
