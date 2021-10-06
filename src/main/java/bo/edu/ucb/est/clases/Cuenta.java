@@ -15,10 +15,19 @@ public class Cuenta {
     private String tipo;
     private double saldo;
 
-    public Cuenta(String moneda, String tipo, double saldo) {
+    public Cuenta(int codigo, String moneda, String tipo, double saldo) {
+        this.codigo = codigo;
         this.moneda = moneda;
         this.tipo = tipo;
         this.saldo = saldo;
+    }
+    
+    public void setTipo(String cuenta){
+        this.tipo = cuenta;
+    }
+    
+    public int getCodigo(){
+        return codigo;
     }
 
     public String getMoneda() {
@@ -33,9 +42,18 @@ public class Cuenta {
         return saldo;
     }
     
-    
-    public int generarCodigo(){
-        return 0;
+    public void setSaldo(double nuevoMonto){
+        this.saldo = nuevoMonto;
     }
+    
+    public String toString(){
+        return "Número: "+codigo+"\n"+
+               "Tipo: "+tipo+"\n"+
+               "Moneda: "+moneda+"\n"+
+               "Saldo: "+saldo;
+    }
+    
+    
+
     
 }

@@ -5,8 +5,8 @@
  */
 package bo.edu.ucb.est.clases;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -16,20 +16,23 @@ public class Usuario {
     private String Nombre;
     private String PinDeSeguridad;
     private int estadoConversacion;
-    private Map<Integer,Cuenta> cuentas;
+    private List<Cuenta> cuentas;
+    private int ultimaCuentaConsultada;
 
     public Usuario(String Nombre, String PinDeSeguridad) {
         this.Nombre = Nombre;
         this.PinDeSeguridad = PinDeSeguridad;
-        this.cuentas = new HashMap<>();
+        this.cuentas = new ArrayList();
         this.estadoConversacion = 1;
+        this.ultimaCuentaConsultada = 0;
     }
     
     public Usuario(){
         this.Nombre = "";
         this.PinDeSeguridad = "";
-        this.cuentas = new HashMap<>();
-        this.estadoConversacion = 0;
+        this.cuentas = new ArrayList();
+        this.estadoConversacion = 1;
+        this.ultimaCuentaConsultada = 0;
     }
 
     public String getNombre() {
@@ -40,12 +43,16 @@ public class Usuario {
         return PinDeSeguridad;
     }
 
-    public Map<Integer, Cuenta> getCuentas() {
+    public List<Cuenta> getCuentas() {
         return cuentas;
     }
     
     public int getEstadoConversacion(){
         return estadoConversacion;
+    }
+    
+    public int getUltimaCuentaConsultada(){
+        return ultimaCuentaConsultada;
     }
 
     public void setNombre(String Nombre) {
@@ -60,11 +67,23 @@ public class Usuario {
         estadoConversacion = n;
     }
     
-    public void agregarCuenta(int clave, Cuenta C){
-        cuentas.put(clave, C);
+    public void setUltimaCuentaConsultada(int numeroCuenta){
+        this.ultimaCuentaConsultada = numeroCuenta;
     }
     
+    public void agregarCuenta(Cuenta C){
+        cuentas.add(C);
+    }
     
+    public Cuenta obtenerCuenta(int codigo){
+        Cuenta c = null;
+        for(int i=0;i<cuentas.size();i++){
+            if(cuentas.get(i).getCodigo() == codigo){
+                c = cuentas.get(i);
+            }
+        }
+        return c;
+    }   
     
     
     

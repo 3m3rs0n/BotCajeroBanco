@@ -5,6 +5,8 @@
  */
 package bo.edu.ucb.est.bot;
 
+import bo.edu.ucb.est.clases.Cuenta;
+import bo.edu.ucb.est.clases.Respuesta;
 import bo.edu.ucb.est.clases.Usuario;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,29 +21,12 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 public class BancoRespuesta {
     String nombre;
     Map<String,Usuario> usuarios;
-    List<String> primerVezUsuario = List.of("Bienvenido al "+ "banco de la fortuna"+".",
-            "He notado que aún no eres cliente, procedamos a registrarte",
-            "¿Cual es tu nombre completo?");
-    List<String> pedirRegistroPin = List.of("Por favor elige un PIN de seguridad,"+
-            " este te sera requerido cada que ingreses al sistema.");
-    List<String> registroCorrecto = List.of("Te hemos resgistrado correctamente");
-    List<String> errorPin =  List.of("Lo siento, el código es incorrecto");
-    List<String> menuPrincipal = List.of("Bienvenido",
-            "Elige una opción:\n"+
-                    "1. Ver Saldo.\n"+
-                    "2. Retirar Dinero.\n"+
-                    "3. Depositar Dinero.\n"+
-                    "4. Crear Cuenta.\n"+
-                    "5. Salir.");
-    List<String> sinCuentas = List.of("Usted no tiene cuentas, cree una primero");
-    List<String> seleccionarMoneda =  List.of("Seleccione la moneda:\n"+
-            "1. Dólares"+
-            "2. Bolivianos");
-    
-    
+    int numeroCuenta;
+   
     public BancoRespuesta(String nombre){
         this.nombre = nombre;
         this.usuarios = new HashMap<>();
+        this.numeroCuenta = 100001;
     }
     
     public String getNombre(){
@@ -55,47 +40,124 @@ public class BancoRespuesta {
     public List<String> obtenerRespuesta(Update update){
         List<String> mensajes = new ArrayList();
         String id = update.getMessage().getChatId().toString();
+        Respuesta respuesta =new Respuesta();
         String mensaje = update.getMessage().getText();
         Usuario usuario = usuarios.get(id);
         if(usuario == null){
             usuario = new Usuario();
             usuarios.put(id, usuario);
             usuario.setEstadoConversacion(1);
-            mensajes = primerVezUsuario;
+            mensajes = respuesta.respuestaPrimeraVez(nombre);
         }else{
             int estado = usuario.getEstadoConversacion();
             switch(estado){
                 case 1: //Registro nombre, Pedir Pin
-                    mensajes = pedirRegistroPin;
+                    mensajes = respuesta.RegistroPin();
                     usuario.setEstadoConversacion(2);
                     usuario.setNombre(mensaje);
                     System.out.println(usuarios.get(id).getNombre());
                     break;
                 case 2: //RegistrarPin, Mostrar registro completo, Pedir Pin
-                    //TODO verificar ingreso correcto de PIN
+                    //TODO verificar ingreso correcto para registro de PIN
                     usuario.setPinDeSeguridad(mensaje);
-                    mensajes = new ArrayList<>(registroCorrecto);
-                    mensajes.addAll(construirMensajeBienvenida(id));
+                    mensajes = new ArrayList<>(respuesta.registroCorrecto());
+                    mensajes.addAll(respuesta.construirMensajeBienvenida(usuario, id));
                     usuario.setEstadoConversacion(3);
                     System.out.println(usuarios.get(id).getPinDeSeguridad());
                     break;
-                case 3: //Verificar Pin
+                case 3: //Verificar Pin. Muestra menu principal o mensaje de error
                     if(verificarPin(usuario, mensaje)){
-                        mensajes = menuPrincipal;
+                        mensajes = respuesta.menuPrincipal();
                         usuario.setEstadoConversacion(4);
                     }else{
-                        mensajes = errorPin;
-                        mensajes.addAll(construirMensajeBienvenida(id));
+                        mensajes = new ArrayList<>(respuesta.errorPin());
+                        mensajes.addAll(respuesta.construirMensajeBienvenida(usuario, id));
                     }
                     break;
-                case 4: // Menu de opciones
-                    mensajes = menuPrincipal;
+                case 4: // Controla respuesta de menu de opciones
+                    mensajes = menuOpciones(usuario, mensaje,id);
                     break;
+                case 10: //mostrar cuenta seleccionada
+                    if(controlarIndice(usuario, mensaje)!=0){
+                        Cuenta c = usuario.getCuentas().get(controlarIndice(usuario, mensaje)-1);
+                        mensajes = new ArrayList<>(respuesta.construirMensajeSaldo(c)); 
+                        mensajes.addAll(respuesta.menuPrincipal());
+                        usuario.setEstadoConversacion(4);
+                    }else{
+                        mensajes = respuesta.menuPrincipal();
+                        usuario.setEstadoConversacion(4);
+                    }
+                    break;
+                case 20: //mostrar saldo y pedir cuanto retirar
+                    if(controlarIndice(usuario, mensaje) != 0){
+                        Cuenta c = usuario.getCuentas().get(controlarIndice(usuario, mensaje)-1);
+                        usuario.setUltimaCuentaConsultada(c.getCodigo());
+                        mensajes = new ArrayList<>(respuesta.construirMensajeSaldo(c)); 
+                        mensajes.addAll(respuesta.respuestaCuantoRetirar());
+                        usuario.setEstadoConversacion(21);
+                    }else{
+                        mensajes = respuesta.menuPrincipal();
+                        usuario.setEstadoConversacion(4);
+                    }
+                    break;
+                case 21: //verificar cuanto retirar y luego mostrar menu principal
+                    if(verificarMontoRetiro(usuario, mensaje)){
+                        mensajes = new ArrayList<>(respuesta.transaccionCorrecta());
+                        mensajes.addAll(respuesta.menuPrincipal());
+                        usuario.setEstadoConversacion(4);
+                    }else{
+                        if(usuario.obtenerCuenta(usuario.getUltimaCuentaConsultada()).getSaldo()==0){
+                            mensajes = new ArrayList<>(respuesta.respuestaSaldoInsuficiente());
+                            mensajes.addAll(respuesta.menuPrincipal());
+                            usuario.setEstadoConversacion(4);
+                        }else{
+                            mensajes = new ArrayList<>(respuesta.transaccionIncorrecta());
+                            mensajes.addAll(respuesta.respuestaCuantoRetirar()); 
+                        }                       
+                    }
+                    break;
+                case 30: //mostrar saldo y pedir cuanto depositar
+                    if(controlarIndice(usuario, mensaje)!=0){
+                        Cuenta c = usuario.getCuentas().get(controlarIndice(usuario, mensaje)-1);
+                        usuario.setUltimaCuentaConsultada(c.getCodigo());
+                        mensajes = new ArrayList<>(respuesta.construirMensajeSaldo(c)); 
+                        mensajes.addAll(respuesta.respuestaCuantoDepositar());
+                        usuario.setEstadoConversacion(31);
+                    }else{
+                        mensajes = respuesta.menuPrincipal();
+                        usuario.setEstadoConversacion(4);
+                    }
+                    break;
+                case 31: //verificar cuanto depositar y mostrar menu principal
+                    if(verificarMontoDeposito(usuario, mensaje)){
+                        mensajes = new ArrayList<>(respuesta.transaccionCorrecta());
+                        mensajes.addAll(respuesta.menuPrincipal());
+                        usuario.setEstadoConversacion(4);
+                    }else{
+                        mensajes = new ArrayList<>(respuesta.transaccionIncorrecta());
+                        mensajes.addAll(respuesta.respuestaCuantoDepositar());
+                    }
+                    break;
+                case 40: //Obtener tipo de moneda para crear cuenta
+                    mensajes = crearCuenta(usuario, mensaje);
+                    break;
+                case 41: //Ingresa el tipo de cuenta que se selecciono
+                    mensajes = indicarTipoCuenta(usuario, mensaje);
+                    break;
+                
                 default:
                     break;
             }
         }
         return mensajes;
+    }
+    
+    public int controlarIndice(Usuario u, String m){
+        int ind = verificarIndice(m);
+        if(ind>u.getCuentas().size() ){
+            ind = 0;
+        }
+        return ind;
     }
     
     public boolean verificarPin(Usuario u, String pin){
@@ -106,11 +168,132 @@ public class BancoRespuesta {
         return flag;
     }
     
-    public List<String> construirMensajeBienvenida(String id){
-        List<String> bienvenida = new ArrayList<>();
-        Usuario u = usuarios.get(id);
-        bienvenida.add("Hola de nuevo "+ u.getNombre());
-        bienvenida.add("Solo por seguridad ¿cuál es tu PIN?");
-        return bienvenida;
+    public int verificarIndice(String m){
+        int opc;
+        try{
+            opc = Integer.parseInt(m);
+        }catch (NumberFormatException e){
+            opc = 0;
+        }
+        return opc;
     }
+    
+    public List menuOpciones(Usuario u,String m, String id){
+        int opc = verificarIndice(m);
+        List<String> menu = new ArrayList<>();
+        Respuesta respuesta = new Respuesta();
+        switch (opc){
+            case 1: //Ver saldo
+                menu = respuesta.verificarSiTieneCuentas(u, "Ver Saldo",10);
+                break;
+            case 2: //Retirar Dinero
+                menu = respuesta.verificarSiTieneCuentas(u, "Retirar Dinero",20);
+                break;
+            case 3: // Depositar dinero
+                menu = respuesta.verificarSiTieneCuentas(u, "Depositar Dinero",30);
+                break;
+            case 4: // Crear Cuenta
+                menu = respuesta.seleecionarMoneda();
+                u.setEstadoConversacion(40);
+                break;
+            case 5: // Salir
+                menu = respuesta.construirMensajeBienvenida(u, id);
+                u.setEstadoConversacion(3);
+                break;
+            default:
+                break;
+        }
+        return menu;
+    }
+    
+     public List<String> crearCuenta(Usuario u, String mensaje){
+        int opc = verificarIndice(mensaje);
+        List<String> res = new ArrayList<>();
+        Respuesta respuesta = new Respuesta();
+        switch(opc){
+            case 1: //crear cuenta en bolivianaos
+                Cuenta cuenta = new Cuenta(numeroCuenta, "Dólares", "",0);
+                u.setUltimaCuentaConsultada(numeroCuenta);
+                u.agregarCuenta(cuenta);
+                numeroCuenta++;
+                res = respuesta.seleecionarTipo();
+                u.setEstadoConversacion(41);
+                break;
+            case 2: //crear cuenta en dolares
+                Cuenta c = new Cuenta(numeroCuenta, "Bolivianos", "",0);
+                u.agregarCuenta(c);
+                u.setUltimaCuentaConsultada(numeroCuenta);
+                numeroCuenta++;
+                res = respuesta.seleecionarTipo();
+                u.setEstadoConversacion(41);
+                break;
+            default:
+                res = respuesta.menuPrincipal();
+                u.setEstadoConversacion(3);
+                break;
+                
+        }
+        return res;
+    }
+    
+    public List<String> indicarTipoCuenta(Usuario u, String mensaje){
+        int opc;
+        int codigo;
+        List<String> res;
+        Respuesta respuesta = new Respuesta();
+        try{
+            opc = Integer.parseInt(mensaje);
+        }catch (NumberFormatException e){
+            opc = 0;
+        }
+        switch(opc){
+            case 1: //ingresar Cuenta corriente mostrar mensaje de cuenta creada
+                codigo = u.getUltimaCuentaConsultada();
+                Cuenta cuenta = u.obtenerCuenta(codigo);
+                cuenta.setTipo("Cuenta Corriente");
+                res = new ArrayList<>(respuesta.construirMensajeCuentaCreada(cuenta));
+                res.addAll(respuesta.menuPrincipal());
+                u.setEstadoConversacion(4);
+                break;
+            case 2: //ingresar caja de ahorros mostrar mensaje de cuenta creada
+                codigo = u.getUltimaCuentaConsultada();
+                Cuenta c = u.obtenerCuenta(codigo);
+                c.setTipo("Caja de Ahorros");
+                res = new ArrayList<>(respuesta.construirMensajeCuentaCreada(c));
+                res.addAll(respuesta.menuPrincipal());
+                u.setEstadoConversacion(4);
+                break;
+            default:
+                res = new ArrayList<>(respuesta.mensajeError());
+                res.addAll(respuesta.seleecionarTipo());
+                break;
+        }
+        return res;
+    }
+    
+    public boolean verificarMontoRetiro(Usuario u, String m){
+        boolean flag = false;
+        int cantidad = verificarIndice(m);
+        Cuenta c = u.obtenerCuenta(u.getUltimaCuentaConsultada());
+        double saldo = c.getSaldo();
+        if(cantidad > 0 && cantidad<saldo){
+            c.setSaldo(saldo-cantidad);
+            flag = true;
+        }
+        return flag;
+    }
+    
+    public boolean verificarMontoDeposito(Usuario u, String m){
+        boolean flag = false;
+        int cantidad = verificarIndice(m);
+        Cuenta c = u.obtenerCuenta(u.getUltimaCuentaConsultada());
+        double saldo = c.getSaldo();
+        if(cantidad > 0){
+            c.setSaldo(saldo+cantidad);
+            flag = true;
+        }
+        return flag;
+    }
+    
+
 }
