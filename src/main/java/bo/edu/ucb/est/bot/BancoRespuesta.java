@@ -23,12 +23,18 @@ public class BancoRespuesta {
     Map<String,Usuario> usuarios;
     int numeroCuenta;
     boolean estadoTeclado;
+    int estadoStiker;
    
     public BancoRespuesta(String nombre){
         this.nombre = nombre;
         this.usuarios = new HashMap<>();
         this.numeroCuenta = 100001;
         this.estadoTeclado = false;
+        this.estadoStiker = 0;
+    }
+    
+    public int getEstadoStiker(){
+        return estadoStiker;
     }
     
     public boolean getEstadoTeclado(){
@@ -50,6 +56,7 @@ public class BancoRespuesta {
         String mensaje = update.getMessage().getText();
         Usuario usuario = usuarios.get(id);
         estadoTeclado = false;
+        estadoStiker = 0;
         if(usuario == null){
             usuario = new Usuario();
             usuarios.put(id, usuario);
@@ -66,6 +73,7 @@ public class BancoRespuesta {
                     break;
                 case 2: //RegistrarPin, Mostrar registro completo, Pedir Pin
                     //TODO verificar ingreso correcto para registro de PIN
+                    estadoStiker = 2;
                     usuario.setPinDeSeguridad(mensaje);
                     mensajes = new ArrayList<>(respuesta.registroCorrecto());
                     mensajes.addAll(respuesta.construirMensajeBienvenida(usuario, id));
@@ -77,6 +85,7 @@ public class BancoRespuesta {
                         mensajes = respuesta.menuPrincipal();
                         usuario.setEstadoConversacion(4);
                         estadoTeclado = true;
+                        estadoStiker = 3;
                     }else{
                         mensajes = new ArrayList<>(respuesta.errorPin());
                         mensajes.addAll(respuesta.construirMensajeBienvenida(usuario, id));
@@ -122,6 +131,7 @@ public class BancoRespuesta {
                             mensajes = new ArrayList<>(respuesta.respuestaSaldoInsuficiente());
                             mensajes.addAll(respuesta.menuPrincipal());
                             usuario.setEstadoConversacion(4);
+                            estadoStiker = 4;
                             estadoTeclado = true;
                         }else{
                             mensajes = new ArrayList<>(respuesta.transaccionIncorrecta());
@@ -151,6 +161,7 @@ public class BancoRespuesta {
                     }else{
                         mensajes = new ArrayList<>(respuesta.transaccionIncorrecta());
                         mensajes.addAll(respuesta.respuestaCuantoDepositar());
+                        estadoStiker = 7;
                     }
                     break;
                 case 40: //Obtener tipo de moneda para crear cuenta
@@ -220,8 +231,12 @@ public class BancoRespuesta {
             case 5: // Salir
                 menu = respuesta.construirMensajeBienvenida(u, id);
                 u.setEstadoConversacion(3);
+                estadoStiker = 5;
                 break;
             default:
+                menu = respuesta.menuPrincipal();
+                u.setEstadoConversacion(4);
+                estadoTeclado = true;
                 break;
         }
         return menu;
@@ -275,6 +290,7 @@ public class BancoRespuesta {
                 res = new ArrayList<>(respuesta.construirMensajeCuentaCreada(cuenta));
                 res.addAll(respuesta.menuPrincipal());
                 u.setEstadoConversacion(4);
+                estadoStiker = 6;
                 break;
             case 2: //ingresar caja de ahorros mostrar mensaje de cuenta creada
                 codigo = u.getUltimaCuentaConsultada();
@@ -283,10 +299,12 @@ public class BancoRespuesta {
                 res = new ArrayList<>(respuesta.construirMensajeCuentaCreada(c));
                 res.addAll(respuesta.menuPrincipal());
                 u.setEstadoConversacion(4);
+                estadoStiker = 6;
                 break;
             default:
                 res = new ArrayList<>(respuesta.mensajeError());
                 res.addAll(respuesta.seleecionarTipo());
+                estadoStiker = 0;
                 break;
         }
         return res;

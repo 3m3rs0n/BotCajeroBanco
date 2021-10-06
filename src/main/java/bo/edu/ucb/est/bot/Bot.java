@@ -9,10 +9,14 @@ import java.util.ArrayList;
 import java.util.List;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
+import org.telegram.telegrambots.meta.api.objects.stickers.Sticker;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 /**
@@ -21,15 +25,24 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
  */
 public class Bot extends TelegramLongPollingBot{
     private BancoRespuesta banco;
+    private List<String> stickers = List.of("",
+            "CAACAgIAAxkBAAIG-WFeHBg2PJ_wV6qZvuD_4U4I2cK7AAJrAQACB4YVB_7YGzpWmOdUIQQ", //Mucho dinero
+            "CAACAgEAAxkBAAIG42FeGrIn3pLc7EouLuu8M7Go-VaWAAIIAAOYAAEZT8SZsEjTzYtbIQQ", //jake
+            "CAACAgIAAxkBAAIG_mFeHNjTISMlRX4LdVok8FIR2Hw_AAJsAQACB4YVB_JjxVv2ew8ZIQQ", //corazon dinero
+            "CAACAgIAAxkBAAIHA2FeHQqpMlqJh7kgvDKMRXghedWBAAJ7AQACB4YVBxNydMP0kAc1IQQ",//bankarota
+            "CAACAgEAAxkBAAIHCGFeHYeZG9K1epq9RRQaIJJOCpTzAAIGAANaqglMgm7zm6zHiCohBA",//despedida
+            "CAACAgIAAxkBAAIHPGFeIW2U8aWXGFT_dti29qOegE98AAJ6AQACB4YVB_LBP_Q8ec-sIQQ",  //crearCuenta
+            "CAACAgIAAxkBAAIHQGFeIahG7VGj1kgJQlpzyhuELBd5AAJ4AQACB4YVB_8jluzyCO7OIQQ"); //verificar monto
 
     @Override
     public String getBotToken() {
-       return "";
+       return "2018134799:AAGtWTi3STuR3rcOhbkMUPbRyyL7JZBYEyk";
     }
 
     @Override
     public void onUpdateReceived(Update update) {
         System.out.println(update.getMessage().getChatId().toString()+ ": " + update.getMessage().getText());
+        System.out.println(update);
         if(update.hasMessage()){
             SendMessage message = new SendMessage();
             String id = update.getMessage().getChatId().toString();
@@ -38,23 +51,39 @@ public class Bot extends TelegramLongPollingBot{
             if(banco.getEstadoTeclado()){
                 tecladoNumeros(message);
             }
+            seleccionarSticker(id,banco.getEstadoStiker());
             for(int i=0; i<mensajes.size();i++){
                 message.setText(mensajes.get(i));
                 mandarMensaje(message);
+                
             }  
+        }
+    }
+    
+    public void seleccionarSticker(String id,int indice){
+        if(indice !=0){
+            mandarSticker(id,stickers.get(indice));
+        }
+    }
+    
+    public void mandarSticker(String id, String id_sticker){
+        InputFile stiker = new InputFile(id_sticker);
+        SendSticker mandar = new SendSticker(id, stiker);
+        try{
+            execute(mandar);
+        }catch(TelegramApiException e){
+            
         }
     }
     
     public void tecladoNumeros(SendMessage message) {
 
-        // Create a keyboard
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         message.setReplyMarkup(replyKeyboardMarkup);
         replyKeyboardMarkup.setSelective(true);
         replyKeyboardMarkup.setResizeKeyboard(true);
         replyKeyboardMarkup.setOneTimeKeyboard(true);
 
-        // Create a list of keyboard rows
         List<KeyboardRow> keyboard = new ArrayList<>();
         KeyboardRow primeraFila = new KeyboardRow();
         primeraFila.add(new KeyboardButton("1"));
