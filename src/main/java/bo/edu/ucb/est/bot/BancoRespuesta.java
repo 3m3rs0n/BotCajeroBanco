@@ -185,7 +185,7 @@ public class BancoRespuesta {
     }
     
     public int controlarIndice(Usuario u, String m){
-        int ind = verificarIndice(m);
+        int ind = (int) verificarIndice(m);
         if(ind>u.getCuentas().size() ){
             ind = 0;
         }
@@ -200,10 +200,10 @@ public class BancoRespuesta {
         return flag;
     }
     
-    public int verificarIndice(String m){
-        int opc;
+    public double verificarIndice(String m){
+        double opc;
         try{
-            opc = Integer.parseInt(m);
+            opc = Double.parseDouble(m);
         }catch (NumberFormatException e){
             opc = 0;
         }
@@ -211,7 +211,7 @@ public class BancoRespuesta {
     }
     
     public List menuOpciones(Usuario u,String m, String id){
-        int opc = verificarIndice(m);
+        int opc = (int) verificarIndice(m);
         List<String> menu = new ArrayList<>();
         Respuesta respuesta = new Respuesta();
         switch (opc){
@@ -247,7 +247,7 @@ public class BancoRespuesta {
     }
     
      public List<String> crearCuenta(Usuario u, String mensaje){
-        int opc = verificarIndice(mensaje);
+        int opc = (int) verificarIndice(mensaje);
         List<String> res ;
         Respuesta respuesta = new Respuesta();
         switch(opc){
@@ -316,7 +316,7 @@ public class BancoRespuesta {
     
     public boolean verificarMontoRetiro(Usuario u, String m){
         boolean flag = false;
-        int cantidad = verificarIndice(m);
+        double cantidad = verificarIndice(m);
         Cuenta c = u.obtenerCuenta(u.getUltimaCuentaConsultada());
         double saldo = c.getSaldo();
         if(cantidad > 0 && cantidad<saldo){
@@ -328,7 +328,7 @@ public class BancoRespuesta {
     
     public boolean verificarMontoDeposito(Usuario u, String m){
         boolean flag = false;
-        int cantidad = verificarIndice(m);
+        double cantidad = verificarIndice(m);
         Cuenta c = u.obtenerCuenta(u.getUltimaCuentaConsultada());
         double saldo = c.getSaldo();
         if(cantidad > 0){
